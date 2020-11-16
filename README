@@ -1,0 +1,10 @@
+Prerequisite: Have Python installed
+
+1. Create Tournament Team Sheet. See teamSheetExample.csv as an example
+2. Export Tournament Team Sheet as a CSV file and place it in the same folder as code.
+3. Open Command Prompt and navigate to folder
+4. Type "Python main.py youFileName.csv"
+5. If pokemon are listed as not found, check typing, and look at pokedex.csv for expected spelling
+    5.1. Galarian/Alolan forms are listed in the format "Galarian Moltres"
+    5.2. Normal forms do not have special names, only special forms do. Ex. Landorus & Landorus Therian
+6. Results should be exported to file pokemonTournamentResults.csv
