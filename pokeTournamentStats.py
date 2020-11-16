@@ -10,10 +10,13 @@ class PokeStats:
         self.pokemonUsage = {}
         self.pokemonTeammateUsage = {}
         self.typeCount = {}
+        self.statTotals = {}
+        self.statAverages = {}
         self.conn = None
 
         self.setupDatabase()
         self.generateTypeDict()
+        self.generateStatDict()
         self.parsePokeTournamentData(pokeTournamentFile)
 
     def generateTypeDict(self):
@@ -22,6 +25,12 @@ class PokeStats:
         for type in pokemonTypes:
             self.typeCount[type] = 0
         return
+
+    def generateStatDict(self):
+        stats = ['Total Points', 'HP', 'Attack', 'Defense', 'Special Attack', 'Special Defense', 'Speed']
+        for stat in stats:
+            self.statTotals[stat] = 0
+            self.statAverages[stat] = 0
 
     def parsePokeTournamentData(self, pokeTournamentData):
         with open(pokeTournamentData) as pokeTournamentFile:
@@ -36,9 +45,12 @@ class PokeStats:
             for firstPokemon in range(len(team)):
                 firstPokemonTrimmed = team[firstPokemon].lower().strip().title()
                 self.addPokemonTypes(firstPokemonTrimmed)
+                self.addPokemonStats(firstPokemonTrimmed)
                 self.addPokemonUsage(firstPokemonTrimmed)
                 self.addPokemonTeammateUsage(firstPokemonTrimmed, team[firstPokemon+1:])
 
+        for key, total in self.statTotals.items():
+            self.statAverages[key] = total/(len(self.teamList)*6)
         return
 
     def addPokemonTypes(self, pokemonName):
@@ -53,6 +65,21 @@ class PokeStats:
                 self.typeCount[type2] += 1
         else:
             print("Couldn't find: " + pokemonName)
+        return
+
+    def addPokemonStats(self, pokemonName):
+        cur = self.conn.cursor()
+        cur.execute("SELECT total_points,hp,attack,defense,sp_attack,sp_defense,speed FROM pokedex where name like '{}'"
+                    .format(pokemonName))
+        row = cur.fetchone()
+        if row != None:
+            self.statTotals['Total Points'] += row[0]
+            self.statTotals['HP'] += row[1]
+            self.statTotals['Attack'] += row[2]
+            self.statTotals['Defense'] += row[3]
+            self.statTotals['Special Attack'] += row[4]
+            self.statTotals['Special Defense'] += row[5]
+            self.statTotals['Speed'] += row[6]
         return
 
     def addPokemonUsage(self, pokemonName):
@@ -174,6 +201,9 @@ class PokeStats:
             writer.writerow(["Total Pokemon", len(self.teamList)*6])
             writer.writerow(["Total Unique Pokemon", len(self.pokemonUsage.keys())])
             writer.writerow(["Number of pokemon only appearing once", len(pokemonSingleResults.keys())])
+            writer.writerow(["Average stats across all Pokemon"])
+            for stat, average in self.statAverages.items():
+                writer.writerow([stat, average])
             writer.writerow(["Most Recurring Types"])
             for type, value in pokemonTypeResults.items():
                 writer.writerow([type, value])
